@@ -7,17 +7,13 @@ from bs4 import BeautifulSoup
 
 class LawCrawler:
 	
-	def __init__(self, category, num_process=1, verbose=False):
+	def __init__(self, category, num_process=1):
 		self.num_process = num_process
 		self.category = category
-		self.verbose = verbose
 		self.root_URL = "http://mobile.law.go.kr"
-		if not os.path.exists("log/"):
-			os.makedirs("log/")
-		self.log = open("log/log_crawl.txt", "w")
-
+		
 	def __del__(self):
-		self.log.close()
+	    pass
 
 	def _get_law_list(self, category):
 		"""
@@ -28,7 +24,7 @@ class LawCrawler:
 		- URL_list: URL list of each law
 		"""
 		URL_list = list()
-		page_idx = 500
+		page_idx = 1
 		base_req = self.root_URL+"/LSWM/mobile/"+category+".do?pageIndex="
 		while (True):
 			req = base_req+str(page_idx)
@@ -46,12 +42,7 @@ class LawCrawler:
 				
 			URL_list.extend([t.a["href"] for t in title_list])
 
-			if self.verbose and page_idx % 10 == 0:
-				print("crawl {0} page" .format(page_idx))
-			page_idx += 1
-
-		self.log.write("{0} URLs are crawled\n" .format(len(URL_list)))
-
+		print("{0} URLs are crawled" .format(len(URL_list)))
 		return URL_list
 
 	def _get_law(self, URL_list, output):
@@ -73,16 +64,12 @@ class LawCrawler:
 				law_title = soup.find(id="hgroup").h2.get_text()
 				law_text = soup.find(lambda tag: tag.name == "div" and
 											tag.get("class") == ["section"]).get_text()
-
 			except Exception as e:
-				self.log.write("Parse: {0}\n" .format(url))
+				print("Parse: {0}" .format(url))
+				continue
 
 			# law_text = re.sub('\s+',' ',law_text)
 			data += law_title + "\n" + law_text + "<END>\n"
-  
-			if self.verbose is True:
-			   print("{0}" .format(law_title))
-			 
 
 		output.put(data)
 
@@ -104,6 +91,5 @@ class LawCrawler:
 		for i in range(self.num_process):
 			mp_data.append(process[i][1].get())
 			process[i][0].join()
-			self.log.write("process {0} ended\n" .format(i))
 
 		return "".join(mp_data)

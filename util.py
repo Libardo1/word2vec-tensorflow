@@ -1,9 +1,10 @@
 import argparse
 import re
-import time
 import itertools
 import collections
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
 from konlpy.tag import Mecab
 
 def parse_arguments():
@@ -45,9 +46,35 @@ def parse_arguments():
 							help="Result filename")
 
 	return parser.parse_args()
+	
+	
+def plot_with_labels(low_dim_embs, labels, filename='tsne.png'):
+	plt.figure(figsize=(60, 60))  #in inches
+	for i, label in enumerate(labels):
+		x, y = low_dim_embs[i,:]
+		plt.scatter(x, y)
+		plt.annotate(label,
+                     xy=(x, y),
+                     xytext=(5, 2),
+                     textcoords='offset points',
+                     ha='right',
+                     va='bottom',
+					 family=["NanumGothicCoding"])
+
+	plt.savefig(filename)
 
 
-def preprocess(args, log):
+def visualization(result, word_dict):
+	tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
+	plot_only = len(result)
+	print(plot_only)
+
+	low_dim_embs = tsne.fit_transform(result)
+	labels = [ word_dict[i] for i in range(len(result)) ]
+	plot_with_labels(low_dim_embs, labels)
+
+
+def preprocess(args):
 	"""
 	Description
 
@@ -72,8 +99,6 @@ def preprocess(args, log):
 	word_inv_dict = dict()
 	# Word counter.
 	word_count    = list()
-
-	start_time = time.time()
 
 	""" Tag part-of-speech and remove unimportant words (like josa..). """
 	# Split each laws by <END> symbol.
@@ -105,18 +130,11 @@ def preprocess(args, log):
 	if not word_list[-1]:
 		word_list.pop()
 	
-	end_time = time.time()
-	log.write("Tag part-of-speech done. {0:.2f} sec.\n" .format(end_time-start_time))
-
-	start_time = time.time()
 	# Construct word counter. 1st element in counter is UNKOWN_WORD (simply UNK).
 	word_count.append(["UNK", 0])
 	merged = list(itertools.chain.from_iterable(word_list))
 	word_count.extend(collections.Counter(merged).most_common(args.voca_size-1))
-	end_time = time.time()
-	log.write("Build word counter done. {0:.2f} sec.\n" .format(end_time-start_time))
 
-	start_time = time.time()
 	# Construct word mapping table.
 	word_dict = { v[0] : i for v, i in zip(word_count, itertools.count(0)) }
 	word_inv_dict = { i : v for v, i in word_dict.items() }
@@ -132,9 +150,6 @@ def preprocess(args, log):
 				row.append(word_dict.get("UNK"))
 				word_count[0][1] += 1
 		word2idx.append(row)
-
-	end_time = time.time()
-	log.write("Build word mapping table and idx sequence done. {0:.2f} sec.\n" .format(end_time-start_time))
 
 	word_list = None # dont use anymore
 	word_dict = None # dont use anymore
@@ -167,7 +182,7 @@ def generate_batch(word2idx, args):
 		label[i] = predict
 
 	"""
-
+	Try to vectorize it..
 	row_idx = np.random.randint(0, len(word2idx), args.batch)
 	target_idx = np.random.randint(0, len(word2idx[row_idx]), args.batch)
 	print(word2idx)

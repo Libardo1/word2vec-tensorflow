@@ -1,6 +1,7 @@
 import tensorflow as tf
 import math
 import time
+import os
 from util import *
 
 def train(word2idx, args):
@@ -27,12 +28,16 @@ def train(word2idx, args):
 
 	opt = tf.train.AdamOptimizer(learning_rate=args.lr).minimize(loss_op)
 
-	log = open("log/loss.txt", "w")
+	log = open("loss_history.txt", "w")
 	log.write("lr = {0:.4f}\n" .format(args.lr))
+	
+	if not os.path.exists("save/"):
+	    os.makedirs("save/")
 
 	""" Start tensorflow session """
 	with tf.Session() as sess:
 		init_op = tf.initialize_all_variables()
+		saver = tf.train.Saver()
 		sess.run(init_op)
 
 		for epoch in range(args.num_epoch):
@@ -44,10 +49,17 @@ def train(word2idx, args):
 			if args.verbose and epoch % 100 == 0:
 				print("Loss in {0} epochs: {1:.2f}" .format(epoch, loss))
 				log.write("Loss in {0} epochs: {1:.2f}\n" .format(epoch, loss))
+				
+			# Save model in every 5000 epoch
+			if epoch > 0 and epoch % 500 == 0:
+			    saver.save(sess, "save/w2v-model", global_step=epoch)
+			    print("Model saved")
 
+		# Save final model
+		saver.save(sess, "save/w2v-model-final")
 		result = proj.eval()
-		
-	log.write("Final loss: {0:.2f}\n" .format(loss))
+
+	log.write("Final loss {0} epoch: {1:.2f}\n" .format(args.num_epoch, loss))
 	log.close()
 
 	return result
