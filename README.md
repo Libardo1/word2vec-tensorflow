@@ -1,4 +1,4 @@
-# wore2vec implementation in tensorflow
+# word2vec implementation in tensorflow
 This code first crawl **Korean Law data** in [here](http://mobile.law.go.kr), and do word2vec and visualization.<br>
 Basically each laws is separated by symbol `<END>`. If your text has no `<END>` symbol (just a single document) it will be no problem too.
 
