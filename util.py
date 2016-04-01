@@ -36,8 +36,8 @@ def parse_arguments():
 						    help="Number of neurons in hidden layer (default=100).")
 	parser_w2v.add_argument("--neg_sample", type=int, default="128", metavar="",
 						    help="Number of negative sample when calc NCE loss (default=128).")
-	parser_w2v.add_argument("--num_epoch", type=int, default="1000", metavar="",
-						    help="Number of epoch to train (default=1000).")
+	parser_w2v.add_argument("--num_iter", type=int, default="10000", metavar="",
+						    help="Number of iterations to train (default=10000).")
 	parser_w2v.add_argument("--lr", type=float, default="0.025", metavar="",
 						    help="Learning rate (default=0.025).")
 	parser_w2v.add_argument("--verbose", action="store_true", default=False,
@@ -66,11 +66,10 @@ def plot_with_labels(low_dim_embs, labels, filename='tsne.png'):
 
 def visualization(result, word_dict):
 	tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
-	plot_only = len(result)
-	print(plot_only)
+	plot_only = 500
 
-	low_dim_embs = tsne.fit_transform(result)
-	labels = [ word_dict[i] for i in range(len(result)) ]
+	low_dim_embs = tsne.fit_transform(result[0:500])
+	labels = [ word_dict[i] for i in range(500) ]
 	plot_with_labels(low_dim_embs, labels)
 
 

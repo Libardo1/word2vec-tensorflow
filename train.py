@@ -40,26 +40,26 @@ def train(word2idx, args):
 		saver = tf.train.Saver()
 		sess.run(init_op)
 
-		for epoch in range(args.num_epoch):
+		for iters in range(args.num_iter):
 			batch_input, batch_label = generate_batch(word2idx, args)
 			feed_dict = {train_input: batch_input, train_label: batch_label}
 			
 			_, loss = sess.run([opt, loss_op], feed_dict=feed_dict)
 
-			if args.verbose and epoch % 100 == 0:
-				print("Loss in {0} epochs: {1:.2f}" .format(epoch, loss))
-				log.write("Loss in {0} epochs: {1:.2f}\n" .format(epoch, loss))
+			if args.verbose and iters % 100 == 0:
+				print("Loss in {0} iters: {1:.2f}" .format(iters, loss))
+				log.write("Loss in {0} iters: {1:.2f}\n" .format(iters, loss))
 				
-			# Save model in every 5000 epoch
-			if epoch > 0 and epoch % 500 == 0:
-			    saver.save(sess, "save/w2v-model", global_step=epoch)
+			# Save model in every 500 iters
+			if iters > 0 and iters % 500 == 0:
+			    saver.save(sess, "save/w2v-model", global_step=iters)
 			    print("Model saved")
 
 		# Save final model
 		saver.save(sess, "save/w2v-model-final")
 		result = proj.eval()
 
-	log.write("Final loss {0} epoch: {1:.2f}\n" .format(args.num_epoch, loss))
+	log.write("Final loss {0} iters: {1:.2f}\n" .format(args.num_iter, loss))
 	log.close()
 
 	return result

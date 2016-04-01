@@ -10,9 +10,9 @@ for i in range(1):
 			--input data/data.txt \
 			--result result \
 			--voca_size 20000 \
-			--batch 409 \
+			--batch 4096 \
 			--hidden_size 512 \
-			--num_epoch 1000 \
+			--num_iter 10000 \
 			--window 5 \
 			--verbose \
 			--lr " + str(lr)
